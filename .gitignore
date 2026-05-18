@@ -1,0 +1,62 @@
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env.bak
+
+# ── Environment / secrets (never commit) ──────────────────────────────────────
+# .env is intentionally excluded — it contains API keys and credentials.
+# Use .env.example as a template for onboarding.
+.env
+
+# ── Jupyter ────────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Model artefacts and pipeline outputs ──────────────────────────────────────
+# Large binary files — regenerate with: python main.py
+outputs/models/best_model.pkl
+outputs/models/preprocessor.pkl
+outputs/models/best_model_*.pkl        # versioned retrain copies
+outputs/models/preprocessor_*.pkl     # versioned retrain copies
+outputs/df_clean.pkl                   # Airflow intermediate (transient)
+outputs/split_data.pkl                 # Airflow intermediate (transient)
+
+# Keep structured outputs (lightweight, useful for review)
+!outputs/models/residual_std.json
+!outputs/reports/*.csv
+!outputs/plots/*.png
+!outputs/pipeline.log
+
+# ── Dataset ────────────────────────────────────────────────────────────────────
+# The raw dataset is 14 MB — download from Kaggle and place in data/.
+# Pattern without a leading slash matches data/Flight_Price_Dataset_of_Bangladesh.csv
+# Search Kaggle: "Flight Price Dataset Bangladesh"
+Flight_Price_Dataset_of_Bangladesh.csv
+
+# ── Airflow logs ───────────────────────────────────────────────────────────────
+logs/
+
+# ── IDE / OS ───────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Temporary / debug files ────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
