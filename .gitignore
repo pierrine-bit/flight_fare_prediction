@@ -17,8 +17,6 @@ env/
 .env.bak
 
 # ── Environment / secrets (never commit) ──────────────────────────────────────
-# .env is intentionally excluded — it contains API keys and credentials.
-# Use .env.example as a template for onboarding.
 .env
 
 # ── Jupyter ────────────────────────────────────────────────────────────────────
@@ -29,10 +27,10 @@ env/
 # Large binary files — regenerate with: python main.py
 outputs/models/best_model.pkl
 outputs/models/preprocessor.pkl
-outputs/models/best_model_*.pkl        # versioned retrain copies
-outputs/models/preprocessor_*.pkl     # versioned retrain copies
-outputs/df_clean.pkl                   # Airflow intermediate (transient)
-outputs/split_data.pkl                 # Airflow intermediate (transient)
+outputs/models/best_model_*.pkl        
+outputs/models/preprocessor_*.pkl     
+outputs/df_clean.pkl                   
+outputs/split_data.pkl                 
 
 # Keep structured outputs (lightweight, useful for review)
 !outputs/models/residual_std.json
@@ -41,8 +39,6 @@ outputs/split_data.pkl                 # Airflow intermediate (transient)
 !outputs/pipeline.log
 
 # ── Dataset ────────────────────────────────────────────────────────────────────
-# The raw dataset is 14 MB — download from Kaggle and place in data/.
-# Pattern without a leading slash matches data/Flight_Price_Dataset_of_Bangladesh.csv
 # Search Kaggle: "Flight Price Dataset Bangladesh"
 Flight_Price_Dataset_of_Bangladesh.csv
 
