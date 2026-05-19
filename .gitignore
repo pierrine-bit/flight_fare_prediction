@@ -1,5 +1,4 @@
-cat > .gitignore <<EOL
-# ── Python
+# ── Python / virtual environments
 __pycache__/
 *.py[cod]
 *.pyo
@@ -9,31 +8,33 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-.eggs/
-
-# ── Virtual environments
-venv/
 .venv/
+venv/
 env/
 .env
 .env.bak
 .env.example
 
-# ── Jupyter
+# ── Jupyter / checkpoints
 .ipynb_checkpoints/
-*.ipynb_checkpoints
 
-# ── Outputs
+# ── Outputs / intermediate files
 outputs/
 !outputs/models/best_model.pkl
 !outputs/models/preprocessor.pkl
 !outputs/models/residual_std.json
 
-# ── Dataset
-Flight_Price_Dataset_of_Bangladesh.csv
+# ── Dataset and Airflow config
+data/
+config/airflow.cfg
+dags/.airflowignore
+data/.gitkeep
 
-# ── Airflow logs
+# ── Logs / temporary files
 logs/
+*.log
+*.tmp
+*.bak
 
 # ── IDE / OS
 .vscode/
@@ -41,9 +42,3 @@ logs/
 *.DS_Store
 Thumbs.db
 desktop.ini
-
-# ── Temporary / debug files
-*.log
-*.tmp
-*.bak
-EOL
