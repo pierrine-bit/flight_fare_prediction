@@ -1,0 +1,2 @@
+column,unexpected_val,count,pct,expected_set
+Class,First Class,18979,33.3,"['Economy', 'Business', 'First']"

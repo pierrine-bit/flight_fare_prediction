@@ -9,19 +9,18 @@ from pathlib import Path
 ROOT_DIR    = Path(__file__).resolve().parent.parent
 DATA_PATH   = ROOT_DIR / "data" / "Flight_Price_Dataset_of_Bangladesh.csv"
 OUTPUTS_DIR = ROOT_DIR / "outputs"
-MODELS_DIR  = OUTPUTS_DIR / "models"    # .pkl artefacts + residual_std.json
-PLOTS_DIR   = OUTPUTS_DIR / "plots"     # all .png figures
-REPORTS_DIR = OUTPUTS_DIR / "reports"   # all .csv reports + pipeline.log
+MODELS_DIR  = OUTPUTS_DIR / "models"   
+PLOTS_DIR   = OUTPUTS_DIR / "plots"     
+REPORTS_DIR = OUTPUTS_DIR / "reports"  
 
 # Reproducibility 
 RANDOM_STATE = 42
 TEST_SIZE    = 0.20
 
 # Cross-validation
-CV_FOLDS      = 5    # folds used for the final comparative CV report (shared KFold)
-GRID_CV_FOLDS = 5    # folds used inside GridSearchCV / RandomizedSearchCV during tuning
-N_ITER        = 75   # RandomizedSearchCV iterations for ensemble models (RF, XGBoost, LightGBM)
-                     # Increased from 50 → 75 for broader exploration of high-dim search spaces
+CV_FOLDS      = 5    
+GRID_CV_FOLDS = 5    
+N_ITER        = 50   
 
 #  Column rename map: raw CSV names → clean internal names 
 COLUMN_RENAME_MAP: dict[str, str] = {
@@ -89,11 +88,10 @@ EXPECTED_CATEGORIES: dict[str, list[str] | None] = {
     "Airline":  None,
 }
 
-# ── Minimum valid base fare (hard threshold for row removal) 
-MIN_VALID_FARE = 500   # BDT
+# ── Minimum valid base fare  
+MIN_VALID_FARE = 500   
 
 # ── Missing-value imputation strategies per column 
-# Centralised here so data_cleaner.py doesn't embed business logic as magic strings.
 IMPUTATION_STRATEGY: dict[str, str] = {
     "Tax_Surcharge":         "median",
     "Base_Fare":             "median",
@@ -104,7 +102,7 @@ IMPUTATION_STRATEGY: dict[str, str] = {
     "Destination":           "mode",
     "Season":                "mode",
     "Stop_Raw":              "mode",
-    "Aircraft_Type":         "Unknown",   # literal fill — 'Unknown' is a valid category
+    "Aircraft_Type":         "Unknown",   
     "Class":                 "mode",
     "Booking_Source":        "mode",
 }

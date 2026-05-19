@@ -86,7 +86,7 @@ def run_pipeline(data_path: Path, skip_eda: bool = False) -> dict:
     X_full = np.vstack([split.X_train_proc, split.X_test_proc])
     y_full = np.concatenate([split.y_train,  split.y_test])
     logger.info("Retraining %s on full dataset (%s rows)...", best_name, f"{len(y_full):,}")
-    best_model.fit(X_full, y_full)          # fit() directly — clone() breaks XGBoost pickling
+    best_model.fit(X_full, y_full)         
     logger.info("Retraining complete.")
 
     # ── Stage 8: Persist artefacts ────────────────────────────────────────────

@@ -1,0 +1,6 @@
+column,bound_lo,bound_hi,n_below,n_above,n_removed,pct_removed
+Base_Fare,500.0,500000.0,0,0,0,0.0
+Tax_Surcharge,0.0,100000.0,0,0,0,0.0
+Total_Fare,500.0,600000.0,0,0,0,0.0
+Duration_hrs,0.25,20.0,0,0,0,0.0
+Days_Before_Departure,0.0,365.0,0,0,0,0.0

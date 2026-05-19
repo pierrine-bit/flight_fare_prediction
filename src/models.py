@@ -94,12 +94,12 @@ def get_random_params() -> dict:
     ─────────────────────────────────────────
     Random Forest : 5 × 5 × 4 × 3 × 4 × 1 = 1,200 combinations — full GridSearch would
                    require 1,200 × 5 folds = 6,000 fits × ~3 min each → infeasible.
-                   RandomizedSearchCV with n_iter=75 samples 75 diverse points, giving
+                   RandomizedSearchCV with n_iter=50 samples 50 diverse points, giving
                    broad coverage while keeping wall-clock time under 45 minutes.
 
     XGBoost/LightGBM : 5 × 6 × 6 × 5 × 5 × 6 × 5 × 3 ≈ 810,000 combinations.
-                   Random sampling is the only practical approach. n_iter=75 with
-                   RANDOM_STATE ensures reproducibility and broader exploration than n_iter=50.
+                   Random sampling is the only practical approach. n_iter=50 with
+                   RANDOM_STATE ensures reproducibility.
 
     Note: Hyperparameter interactions (e.g. learning_rate × n_estimators,
     subsample × colsample_bytree) are best handled by random sampling rather than
@@ -287,9 +287,10 @@ def train_all_models(
 
     Tuning strategy
     ───────────────
-    Linear (Ridge, Lasso)  → GridSearchCV(cv=GRID_CV_FOLDS=5)
-    Ensemble (DT, RF, XGB, LGB) → RandomizedSearchCV(n_iter=50, cv=GRID_CV_FOLDS=5)
-    Baseline (Linear Regression) → No tuning.
+    Linear Regression            → No tuning (baseline reference).
+    Ridge, Lasso                 → GridSearchCV (exhaustive) — single α parameter; compact grid.
+    Decision Tree                → GridSearchCV (exhaustive) — 60 combos (5×4×3); fast enough for full search.
+    Random Forest, XGBoost, LGB  → RandomizedSearchCV (n_iter=50) — search spaces too large for exhaustive search.
     """
     if kf is None:
         kf = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)

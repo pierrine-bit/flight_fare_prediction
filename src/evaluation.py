@@ -44,33 +44,42 @@ def build_comparison_table(results: list[dict]) -> pd.DataFrame:
     """
     Convert the list of per-model metrics dicts into a sorted DataFrame.
 
-    Sort order (three-level tiebreaker — fully deterministic)
-    ──────────────────────────────────────────────────────────
+    Sort order — four-level fully deterministic tiebreaker
+    ───────────────────────────────────────────────────────
     1. CV R² Mean   — descending  (primary: best cross-validated generalisation)
     2. CV R² Std    — ascending   (tiebreaker 1: prefer the more stable model)
     3. RMSE (BDT)   — ascending   (tiebreaker 2: prefer lower absolute error)
+    4. Model name   — ascending   (tiebreaker 3: alphabetical — fully deterministic)
 
-    Rationale: when two models score identically on CV R² Mean (common with
-    nearly-equivalent ensemble models), raw sort order is arbitrary and run-
-    dependent. Preferring lower Std then lower RMSE gives a principled,
-    reproducible ranking that correctly rewards stability and precision.
+    Rationale: all seven models score within 0.0012 CV R² of each other.
+    RandomizedSearchCV explores different hyperparameter samples on every run,
+    so two models can tie on criteria 1–3 depending on the random seed used
+    during training. Without a final tiebreaker the winner would be determined
+    by insertion order (which model was trained first) — arbitrary and misleading.
+    Alphabetical order as the last resort guarantees the same model wins every
+    time all numeric criteria are equal, making the selection fully reproducible.
     """
     df         = pd.DataFrame(results).set_index("Model")
     display_df = df.drop(columns=["Log Transformed"], errors="ignore")
 
-    # Three-level deterministic sort
-    display_df = display_df.sort_values(
-        by=["CV R² Mean", "CV R² Std", "RMSE (BDT)"],
-        ascending=[False, True, True],
+    # Reset index to sort on model name as a column, then restore
+    display_df = (
+        display_df
+        .reset_index()
+        .sort_values(
+            by=["CV R² Mean", "CV R² Std", "RMSE (BDT)", "Model"],
+            ascending=[False, True, True, True],
+        )
+        .set_index("Model")
     )
 
-    logger.info("Model Comparison Table (sorted by CV R² Mean → CV R² Std → RMSE):\n%s\n%s\n%s",
+    logger.info("Model Comparison Table (CV R² Mean → Std → RMSE → Name):\n%s\n%s\n%s",
                 "─" * 90, display_df.to_string(), "─" * 90)
 
     best_name = display_df.index[0]
     log_col   = "R² (log)" if "R² (log)" in display_df.columns else "R² (BDT)"
     logger.info(
-        "Recommended model: %s | %s=%.4f | R² (BDT)=%.4f | CV Mean=%.4f ±%.4f",
+        "Best model: %s | %s=%.4f | R²(BDT)=%.4f | CV Mean=%.4f ±%.4f",
         best_name, log_col, display_df.loc[best_name, log_col],
         display_df.loc[best_name, "R² (BDT)"],
         display_df.loc[best_name, "CV R² Mean"],
@@ -183,6 +192,9 @@ def _draw_residuals_dist(ax: plt.Axes, residuals_bdt: np.ndarray) -> None:
 
 def _draw_feature_importance(ax: plt.Axes, model, feature_names: list[str],
                               model_name: str) -> None:
+    # Tree-based models expose feature_importances_ (mean gain / impurity decrease).
+    # Linear models expose coef_; we use absolute values so sign doesn't hide magnitude.
+    # Priority: feature_importances_ checked first — it's more informative for ensembles.
     if hasattr(model, "feature_importances_"):
         importances = pd.Series(model.feature_importances_, index=feature_names)
         xlabel = "Importance Score (Gain)"
@@ -190,14 +202,17 @@ def _draw_feature_importance(ax: plt.Axes, model, feature_names: list[str],
         importances = pd.Series(np.abs(model.coef_), index=feature_names)
         xlabel = "|Coefficient|"
     else:
+        # Fallback for model types that expose neither attribute (e.g. KNN, SVR).
         ax.text(0.5, 0.5, "Feature importances not available\nfor this model type",
                 ha="center", va="center", transform=ax.transAxes, fontsize=11)
         return
 
+    # Select top 15 by importance, then re-sort ascending so the largest bar is at the top.
     top = importances.sort_values(ascending=False).head(15).sort_values()
     top.plot(kind="barh", ax=ax, color="steelblue", edgecolor="white")
     ax.set_title(f"Top 15 Feature Importances — {model_name}", fontsize=12)
     ax.set_xlabel(xlabel)
+    # Annotate each bar with its numeric score for quick comparison.
     for i, val in enumerate(top.values):
         ax.text(val + importances.max() * 0.005, i, f"{val:.3f}", va="center", fontsize=8)
 

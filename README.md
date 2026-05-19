@@ -98,25 +98,36 @@ flight_fare_prediction/
 | 10    | Airflow DAG → automated daily retraining                            |
 
 
-## Model Results 
+## Model Results
 
-| Model             | CV R² Mean | Test R² | MAE (BDT) | RMSE (BDT) |
-| ----------------- | ---------- | ------- | --------- | ---------- |
-| XGBoost           | 0.8934     | 0.6514  | 28,278    | 47,624     |
-| Random Forest     | 0.8932     | 0.6561  | 28,164    | 47,307     |
-| Lasso             | 0.8931     | 0.6496  | 28,271    | 47,748     |
-| LightGBM          | 0.8931     | 0.6544  | 28,216    | 47,418     |
-| Linear Regression | 0.8930     | 0.6511  | 28,244    | 47,650     |
-| Ridge             | 0.8930     | 0.6510  | 28,245    | 47,652     |
-| Decision Tree     | 0.8923     | 0.6564  | 28,171    | 47,286     |
+| Model             | CV R² Mean | CV R² Std | Test R² | MAE (BDT) | RMSE (BDT) |
+| ----------------- | ---------- | --------- | ------- | --------- | ---------- |
+| Random Forest     | 0.8932     | 0.0012    | 0.6561  | 28,164    | 47,307     |
+| XGBoost           | 0.8932     | 0.0012    | 0.6518  | 28,272    | 47,597     |
+| Lasso             | 0.8931     | 0.0013    | 0.6496  | 28,271    | 47,748     |
+| LightGBM          | 0.8931     | 0.0012    | 0.6544  | 28,216    | 47,418     |
+| Linear Regression | 0.8930     | 0.0013    | 0.6511  | 28,244    | 47,650     |
+| Ridge             | 0.8930     | 0.0013    | 0.6510  | 28,245    | 47,652     |
+| Decision Tree     | 0.8923     | 0.0010    | 0.6564  | 28,171    | 47,286     |
 
-Residual std = 46,759 BDT → 95% CI ±91,647 BDT.
+> **Best model is selected dynamically** at runtime by CV R² Mean → CV R² Std → RMSE (BDT).  
+> Random Forest and XGBoost are **statistically equivalent** (within 0.0002 CV R²) — the winner varies by run depending on which hyperparameters RandomizedSearchCV finds. Both achieve CV R² ≈ 0.8932, MAE ≈ BDT 28,200, and 95% CI ±91,600 BDT.
+
+Residual std ≈ 46,700 BDT → 95% CI ≈ ±91,600 BDT.
 
 ## Key Design Decisions
 
-The pipeline applies a **log1p transformation** to the target (skew 1.554 → −0.172) to improve fit.
-The **preprocessor is fitted only on training data** to prevent leakage, and categorical features use **`handle_unknown='ignore'`** for unseen values.
-A **shared KFold** ensures consistent CV splits. The **best model is selected dynamically** by CV R² mean, and all artefacts are **versioned** for reproducibility.
+| Decision | Rationale |
+|----------|-----------|
+| log1p target transform | Reduces right skew (1.554 → −0.172); improves fit for all models |
+| Preprocessor fitted on train only | Prevents leakage — test statistics never influence the pipeline |
+| `handle_unknown='ignore'` in OHE | Unseen airlines/routes at inference silently map to zero vectors |
+| Shared KFold across all models | Identical splits eliminate split-randomness as a confound |
+| GridSearchCV for Ridge, Lasso, Decision Tree | Exhaustive search feasible at these grid sizes (15, 9, 60 combos) |
+| RandomizedSearchCV n_iter=75 for ensembles | RF/XGBoost/LightGBM have 800k+ combinations — random sampling is the only practical approach |
+| 4-level tiebreaker: CV R² → Std → RMSE → Name | RF and XGBoost are statistically tied; deterministic ordering prevents run-dependent results |
+| Config-driven imputation with catch-all fallback | New dataset columns are handled automatically; only config needs updating |
+| Versioned artefact saves | Every retrain preserves a timestamped rollback copy |
 
 ## Conclusion
 

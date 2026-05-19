@@ -1,0 +1,15 @@
+column,expected,actual,status,action,nulls_after,description
+Airline,object,object,OK,—,0,Categorical — airline name
+Source,object,object,OK,—,0,Categorical — origin IATA code
+Destination,object,object,OK,—,0,Categorical — destination IATA code
+Date,datetime,datetime64[ns],FIXED,pd.to_datetime(errors='coerce'),0,Departure datetime
+Base_Fare,float64,float64,OK,—,0,Base ticket price (BDT)
+Tax_Surcharge,float64,float64,OK,—,0,Tax and surcharges (BDT)
+Total_Fare,float64,float64,OK,—,0,Total fare = Base + Tax (BDT)
+Duration_hrs,float64,float64,OK,—,0,Flight duration in hours
+Stop_Raw,object,object,OK,—,0,Raw stopover label (Direct/1 Stop/2 Stops)
+Season,object,object,OK,—,0,Travel season from dataset
+Days_Before_Departure,int64,int64,OK,—,0,Days between booking and departure
+Aircraft_Type,object,object,OK,—,0,Aircraft model
+Class,object,object,OK,—,0,Cabin class (Economy/Business/First)
+Booking_Source,object,object,OK,—,0,Channel (Online/Travel Agency/Direct)

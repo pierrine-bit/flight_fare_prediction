@@ -157,7 +157,7 @@ def validate_value_ranges(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
     return df, range_report
 
 
-# ── Step 2.5: Categorical value validation ────────────────────────────────────
+# ── Step 2.5: Categorical value validation ─────────────────────────────────────
 
 def validate_categorical_values(df: pd.DataFrame) -> pd.DataFrame:
     """Audit categorical columns against expected value sets. Does NOT remove rows."""
@@ -296,6 +296,8 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     logger.info("── Applying Imputation (config-driven via IMPUTATION_STRATEGY) ─")
 
     # ── Primary pass: apply each column's declared strategy ──────────────────
+    # Iterates over IMPUTATION_STRATEGY (config.py) — adding a new column to the
+    # dataset only requires a config change, not a code change here.
     for col, strategy in IMPUTATION_STRATEGY.items():
         if col not in df.columns or not df[col].isnull().any():
             continue  # column absent or already clean — skip
@@ -303,6 +305,8 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
         n_null = int(df[col].isnull().sum())
 
         if strategy == "median":
+            # Median is preferred over mean for skewed numeric columns (e.g. fare)
+            # because it is resistant to outlier influence.
             if df[col].isnull().all():
                 logger.warning("[handle_missing_values] '%s' is entirely null → filling with 0.", col)
                 df[col] = df[col].fillna(0)
@@ -313,6 +317,7 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
                      f"{col}: filled {n_null} NaN(s) with MEDIAN = {fill_val:,.4f}")
 
         elif strategy == "mean":
+            # Mean fill for symmetric numeric distributions where outliers are not a concern.
             if df[col].isnull().all():
                 logger.warning("[handle_missing_values] '%s' is entirely null → filling with 0.", col)
                 df[col] = df[col].fillna(0)
@@ -323,6 +328,8 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
                      f"{col}: filled {n_null} NaN(s) with MEAN = {fill_val:,.4f}")
 
         elif strategy == "mode":
+            # Mode fill for categoricals — preserves the existing frequency distribution
+            # rather than introducing a new or synthetic category.
             if df[col].isnull().all():
                 logger.warning("[handle_missing_values] '%s' is entirely null → filling with 'Unknown'.", col)
                 df[col] = df[col].fillna("Unknown")
@@ -333,14 +340,16 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
                      f"{col}: filled {n_null} NaN(s) with MODE = '{fill_val}'")
 
         elif strategy == "drop":
-            # Rows where this column is null are dropped entirely (e.g. Date)
+            # Temporal columns (e.g. Date) cannot be imputed — a fake date would
+            # corrupt Month, Weekday, and Days_Before_Departure feature derivations.
             n_before = len(df)
             df = df.dropna(subset=[col]).reset_index(drop=True)
             _log("handle_missing_values",
                  f"{col}: dropped {n_before - len(df)} row(s) — cannot impute '{col}'")
 
         else:
-            # Any other value is treated as a literal fill (e.g. 'Unknown')
+            # Any unrecognised strategy string is used as a literal fill value —
+            # supports sparse categoricals like Aircraft_Type → 'Unknown'.
             df[col] = df[col].fillna(strategy)
             _log("handle_missing_values",
                  f"{col}: filled {n_null} NaN(s) with literal '{strategy}'")
@@ -352,8 +361,7 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
         _log("handle_missing_values",
              f"Date: dropped {n_before - len(df)} row(s) — temporal features cannot be imputed.")
 
-    # ── Catch-all fallback: any remaining nulls not in IMPUTATION_STRATEGY ───
-    # This guards against schema changes (new columns added to CSV) without
+   
     # requiring edits to this function — only IMPUTATION_STRATEGY needs updating.
     still_null_cols = [c for c in df.columns if df[c].isnull().any()]
     if still_null_cols:
@@ -375,8 +383,6 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
                 logger.warning("  '%s' → generic MODE fallback = '%s'", col, fill_val)
 
     # ── Post-imputation consistency check ─────────────────────────────────────
-    # If both fare components are present, recompute Total_Fare to ensure internal
-    # consistency — prevents a scenario where only one component was imputed.
     if {"Base_Fare", "Tax_Surcharge"}.issubset(df.columns):
         df["Total_Fare"] = df["Base_Fare"] + df["Tax_Surcharge"]
         _log("handle_missing_values",
@@ -432,16 +438,16 @@ def clean_pipeline(df: pd.DataFrame,
 
     Order dependency
     ────────────────
-    1. standardise_column_names    — rename first so downstream uses clean names
-    2. validate_schema             — fail fast if required columns are missing
-    3. validate_dtypes             — coerce types; may introduce NaN
-    4. validate_value_ranges       — remove out-of-range rows before imputation
-    5. validate_categorical_values — audit-only; logs unexpected values
-    6. normalise_categorical_values— fix known label inconsistencies
-    7. remove_duplicates           — dedup before computing imputation statistics
-    8. audit_missing_values        — pre-imputation snapshot
-    9. handle_missing_values       — column-specific imputation
-    10. fix_invalid_fares          — fare sanity check + Total_Fare recompute
+    1. standardise_column_names    
+    2. validate_schema             
+    3. validate_dtypes             
+    4. validate_value_ranges       
+    5. validate_categorical_values 
+    6. normalise_categorical_values
+    7. remove_duplicates           
+    8. audit_missing_values        
+    9. handle_missing_values       
+    10. fix_invalid_fares          
 
     """
     logger.info("\n%s\nDATA CLEANING PIPELINE\n%s", "=" * 65, "=" * 65)
