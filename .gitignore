@@ -20,6 +20,7 @@ env/
 
 # ── Outputs / intermediate files
 outputs/
+!outputs/models/
 !outputs/models/best_model.pkl
 !outputs/models/preprocessor.pkl
 !outputs/models/residual_std.json
