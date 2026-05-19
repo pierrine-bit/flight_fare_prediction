@@ -1,4 +1,5 @@
-# ── Python ─────────────────────────────────────────────────────────────────────
+cat > .gitignore <<EOL
+# ── Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -10,49 +11,39 @@ dist/
 build/
 .eggs/
 
-# ── Virtual environments ───────────────────────────────────────────────────────
+# ── Virtual environments
 venv/
 .venv/
 env/
-.env.bak
-
-# ── Environment / secrets (never commit) ──────────────────────────────────────
 .env
+.env.bak
+.env.example
 
-# ── Jupyter ────────────────────────────────────────────────────────────────────
+# ── Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# ── Model artefacts and pipeline outputs ──────────────────────────────────────
-# Large binary files — regenerate with: python main.py
-outputs/models/best_model.pkl
-outputs/models/preprocessor.pkl
-outputs/models/best_model_*.pkl        
-outputs/models/preprocessor_*.pkl     
-outputs/df_clean.pkl                   
-outputs/split_data.pkl                 
-
-# Keep structured outputs (lightweight, useful for review)
+# ── Outputs
+outputs/
+!outputs/models/best_model.pkl
+!outputs/models/preprocessor.pkl
 !outputs/models/residual_std.json
-!outputs/reports/*.csv
-!outputs/plots/*.png
-!outputs/pipeline.log
 
-# ── Dataset ────────────────────────────────────────────────────────────────────
-# Search Kaggle: "Flight Price Dataset Bangladesh"
+# ── Dataset
 Flight_Price_Dataset_of_Bangladesh.csv
 
-# ── Airflow logs ───────────────────────────────────────────────────────────────
+# ── Airflow logs
 logs/
 
-# ── IDE / OS ───────────────────────────────────────────────────────────────────
+# ── IDE / OS
 .vscode/
 .idea/
 *.DS_Store
 Thumbs.db
 desktop.ini
 
-# ── Temporary / debug files ────────────────────────────────────────────────────
+# ── Temporary / debug files
 *.log
 *.tmp
 *.bak
+EOL
